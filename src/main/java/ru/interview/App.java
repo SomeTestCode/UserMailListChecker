@@ -9,7 +9,7 @@ public class App {
 
         System.out.println(
                 String.format(
-                        "Введите данные по формату [имя пользователя] %s [email1]%s [email2]%s...\n",
+                        "Введите данные по формату [имя пользователя] %s [email1]%s [email2]%s...",
                         UserMailListChecker.USER_DATA_DELIMITER, UserMailListChecker.MAILS_DELIMITER, UserMailListChecker.MAILS_DELIMITER)
         );
 
