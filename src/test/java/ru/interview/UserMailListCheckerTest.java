@@ -36,9 +36,9 @@ public class UserMailListCheckerTest {
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 
         List<String> lines = Arrays.asList(
-            "user1 -> xxx@ya.ru, lol@mail.ru",
-            "user2 -> foo@gmail.com, ups@pisem.net",
-            "user3 -> xyz@pisem.net, vasya@pupkin.com"
+                "user1 -> xxx@ya.ru, lol@mail.ru",
+                "user2 -> foo@gmail.com, ups@pisem.net",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com"
         );
 
         List<String> result = userMailListChecker.getUniqueUserWithMailsLine(lines);
@@ -50,12 +50,12 @@ public class UserMailListCheckerTest {
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 
         List<String> lines = Arrays.asList(
-            "user1",
-            "user1 -> xxx@ya.ru, lol@mail.ru",
-            "user2 -> foo@gmail.com, ups@pisem.net",
-            "user2 -> ",
-            "user3 -> asdasd",
-            "user3 -> xyz@pisem.net, vasya@pupkin.com"
+                "user1",
+                "user1 -> xxx@ya.ru, lol@mail.ru",
+                "user2 -> foo@gmail.com, ups@pisem.net",
+                "user2 -> ",
+                "user3 -> asdasd",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com"
         );
 
         List<String> expected = Arrays.asList(
@@ -73,16 +73,37 @@ public class UserMailListCheckerTest {
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 
         List<String> lines = Arrays.asList(
-            "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru",
-            "user2 -> foo@gmail.com, ups@pisem.net",
-            "user3 -> xyz@pisem.net, vasya@pupkin.com",
-            "user4 -> ups@pisem.net, aaa@bbb.ru",
-            "user5 -> xyz@pisem.net"
+                "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru",
+                "user2 -> foo@gmail.com, ups@pisem.net",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com",
+                "user4 -> ups@pisem.net, aaa@bbb.ru",
+                "user5 -> xyz@pisem.net"
         );
 
         List<String> expected = Arrays.asList(
-            "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru, ups@pisem.net, aaa@bbb.ru",
-            "user3 -> xyz@pisem.net, vasya@pupkin.com"
+                "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru, ups@pisem.net, aaa@bbb.ru",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com"
+        );
+
+        List<String> result = userMailListChecker.getUniqueUserWithMailsLine(lines);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void processMultiUserWithEqualMailsSecondMail() {
+        UserMailListChecker userMailListChecker = new UserMailListChecker();
+
+        List<String> lines = Arrays.asList(
+                "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru",
+                "user2 -> ups@pisem.net, foo@gmail.com",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com",
+                "user4 -> ups@pisem.net, aaa@bbb.ru",
+                "user5 -> xyz@pisem.net"
+        );
+
+        List<String> expected = Arrays.asList(
+                "user1 -> xxx@ya.ru, foo@gmail.com, lol@mail.ru, ups@pisem.net, aaa@bbb.ru",
+                "user3 -> xyz@pisem.net, vasya@pupkin.com"
         );
 
         List<String> result = userMailListChecker.getUniqueUserWithMailsLine(lines);
@@ -94,9 +115,9 @@ public class UserMailListCheckerTest {
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 
         List<String> lines = Arrays.asList(
-            "user1 -> xxx@ya.ru,lol@mail.ru",
-            "user2->foo@gmail.com,      ups@pisem.net",
-            "user3 ->       xyz@pisem.net,        vasya@pupkin.com"
+                "user1 -> xxx@ya.ru,lol@mail.ru",
+                "user2->foo@gmail.com,      ups@pisem.net",
+                "user3 ->       xyz@pisem.net,        vasya@pupkin.com"
         );
 
         List<String> expected = Arrays.asList(
@@ -118,8 +139,9 @@ public class UserMailListCheckerTest {
 
     @Test
     public void formatSingleUserMailUserMapAsLine() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put("test1@example.com", "user1");
+        LinkedHashMap<String, UserMailListChecker.UserContainer> map = new LinkedHashMap<>();
+        UserMailListChecker.UserContainer userContainer = new UserMailListChecker.UserContainer("user1");
+        map.put("test1@example.com", userContainer);
 
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 
@@ -127,8 +149,8 @@ public class UserMailListCheckerTest {
         Assert.assertEquals(1, lines.size());
         Assert.assertEquals("user1 -> test1@example.com", lines.get(0));
 
-        map.put("test2@example.com", "user1");
-        map.put("test3@example.com", "user1");
+        map.put("test2@example.com", userContainer);
+        map.put("test3@example.com", userContainer);
 
         lines = userMailListChecker.formatMailUserMapAsLine(map);
         Assert.assertEquals(1, lines.size());
@@ -137,11 +159,15 @@ public class UserMailListCheckerTest {
 
     @Test
     public void formatMultiUserMailUserMapAsLine() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<>();
-        map.put("test0@example.com", "user1");
-        map.put("test2@example.com", "user2");
-        map.put("test1@example.com", "user1");
-        map.put("test3@example.com", "user1");
+        LinkedHashMap<String, UserMailListChecker.UserContainer> map = new LinkedHashMap<>();
+        UserMailListChecker.UserContainer userContainer1 = new UserMailListChecker.UserContainer("user1");
+        UserMailListChecker.UserContainer userContainer2 = new UserMailListChecker.UserContainer("user2");
+
+
+        map.put("test0@example.com", userContainer1);
+        map.put("test2@example.com", userContainer2);
+        map.put("test1@example.com", userContainer1);
+        map.put("test3@example.com", userContainer1);
 
         UserMailListChecker userMailListChecker = new UserMailListChecker();
 

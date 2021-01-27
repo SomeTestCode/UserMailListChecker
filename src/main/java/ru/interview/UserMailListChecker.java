@@ -24,15 +24,16 @@ public class UserMailListChecker {
 
     /**
      * Получение списка пользователей с уникальными именами и принадлежащими им email-ми
+     *
      * @param inputLines - список строк с данными о пользователях и их email-ах
      * @return обработанный массив строк заданного формата с уникальными именами
      */
     public List<String> getUniqueUserWithMailsLine(List<String> inputLines) {
 
-        Map<String, String> userByMails = new LinkedHashMap<>();
+        Map<String, UserContainer> userByMails = new LinkedHashMap<>();
 
         for (String inputLine : inputLines) {
-            if(!inputLine.contains(USER_DATA_DELIMITER)){
+            if (!inputLine.contains(USER_DATA_DELIMITER)) {
                 continue;
             }
 
@@ -41,27 +42,29 @@ public class UserMailListChecker {
             String userName = lineParts[0].trim();
             String emailsString = lineParts[1].trim();
 
-            if(userName.isEmpty() || emailsString.isEmpty()){
+            if (userName.isEmpty() || emailsString.isEmpty()) {
                 continue;
             }
 
-            String[] emails =  emailsString.split(MAILS_DELIMITER);
+            String[] emails = emailsString.split(MAILS_DELIMITER);
 
+            UserContainer userContainer = new UserContainer(userName);
             for (String email : emails) {
                 email = email.trim();
-                if(!emailValidator.isValid(email)){
+                if (!emailValidator.isValid(email)) {
                     continue;
                 }
 
-                if(!userByMails.containsKey(email)){
-                    userByMails.put(email, userName);
+                if (!userByMails.containsKey(email)) {
+                    userByMails.put(email, userContainer);
                 } else {
-                    userName = userByMails.get(email);
+                    String prevUserName = userByMails.get(email).getUser();
+                    userContainer.setUser(prevUserName);
                 }
             }
         }
 
-        if(userByMails.isEmpty()){
+        if (userByMails.isEmpty()) {
             return new ArrayList<>();
         }
 
@@ -70,10 +73,11 @@ public class UserMailListChecker {
 
     /**
      * Конвертация списка email-ов и соответствующих им имен пользователей в список строк заданного формата
+     *
      * @param userByMails список email-ов и имен пользователей
      * @return массив строк с информацией о пользователях и и их email-ах
      */
-    List<String> formatMailUserMapAsLine(Map<String, String> userByMails) {
+    List<String> formatMailUserMapAsLine(Map<String, UserContainer> userByMails) {
         List<String> result = new ArrayList<>();
 
         Map<String, List<String>> mailByUser = getMailsByUser(userByMails);
@@ -86,16 +90,17 @@ public class UserMailListChecker {
 
     /**
      * Конвертация списка виде email - ползователь в список вида пользователь - массив email-ов
+     *
      * @param userByMails списко email - ползователь
      * @return список пользователь - массив email-ов
      */
-    private Map<String, List<String>> getMailsByUser(Map<String, String> userByMails) {
+    private Map<String, List<String>> getMailsByUser(Map<String, UserContainer> userByMails) {
         Map<String, List<String>> mailByUser = new LinkedHashMap<>();
 
-        for (Map.Entry<String, String> mailUserPair : userByMails.entrySet()) {
+        for (Map.Entry<String, UserContainer> mailUserPair : userByMails.entrySet()) {
             String mail = mailUserPair.getKey();
-            String user = mailUserPair.getValue();
-            if(!mailByUser.containsKey(user)){
+            String user = mailUserPair.getValue().getUser();
+            if (!mailByUser.containsKey(user)) {
                 mailByUser.put(user, new ArrayList<>());
             }
             mailByUser.get(user).add(mail);
@@ -106,12 +111,29 @@ public class UserMailListChecker {
 
     /**
      * Форматирование данных в нужном представлении
-     * @param user пользователь
+     *
+     * @param user      пользователь
      * @param userMails массив email-ов
      * @return строка данных
      */
     private String makeFormattedLine(String user, List<String> userMails) {
         return String.format("%s %s %s", user, USER_DATA_DELIMITER, String.join(MAILS_DELIMITER + " ", userMails));
+    }
+
+    static class UserContainer {
+        private String user;
+
+        public UserContainer(String user) {
+            this.user = user;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public void setUser(String user) {
+            this.user = user;
+        }
     }
 
 }
